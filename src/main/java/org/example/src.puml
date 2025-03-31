@@ -1,0 +1,84 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+interface UserAction {
+    + showMenu()
+}
+
+class User {
+    - String username
+    - String role
+    - Registration registration
+    + void exit()
+}
+
+UserAction <|.. User
+
+class Admin {
+    + Admin(String username, String role, Registration registration)
+    + void showMenu()
+    - void deleteUser(Scanner scanner)
+}
+
+User <|-- Admin
+
+class Recipient {
+    + Recipient(String username, String role, Registration registration)
+    + void showMenu()
+}
+
+User <|-- Recipient
+
+class Donor {
+    + Donor(String username, String role, Registration registration)
+    + void showMenu()
+    - boolean donorSurvey()
+    - int getValidIntInput(String prompt)
+    - boolean askYes(String question)
+}
+
+User <|-- Donor
+
+class Registration {
+    - List<UserData> users
+    + Registration()
+    + void register(String username, String password, String role)
+    + boolean userExists(String username)
+    + String getPassword(String username)
+    + String getRole(String username)
+    + void deleteUser(String username)
+    + void listUsers()
+    - void saveUsers()
+    - void loadUsers()
+}
+
+class UserData {
+    - String username
+    - String password
+    - String role
+}
+
+Registration o-- UserData
+
+class AuthManager {
+    - Scanner scanner
+    - Registration registration
+    + AuthManager()
+    + void start()
+    - void registerUser()
+    - void loginUser()
+    - int getIntInput()
+}
+
+class Main {
+    + main(String[] args)
+}
+
+Main --> AuthManager : "uses"
+Admin --> Registration : "manages users"
+Donor --> Registration : "registers & checks status"
+Recipient --> Registration : "requests blood"
+User --> Registration : "linked to"
+
+@enduml
+
