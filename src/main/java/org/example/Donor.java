@@ -2,14 +2,16 @@ package org.example;
 
 import java.util.Scanner;
 
-class Donor extends User {
-    public Donor(String username, Registration registration) {
-        super(username, "Донор", registration);
+public class Donor extends User {
+    private final Scanner scanner;
+
+    public Donor(String username, String role,Registration registration) {
+        super(username, role,registration);
+        this.scanner = new Scanner(System.in);
     }
 
     @Override
     public void showMenu() {
-        Scanner scanner = new Scanner(System.in);
         int choice;
 
         do {
@@ -29,7 +31,7 @@ class Donor extends User {
 
             switch (choice) {
                 case 1 -> {
-                    boolean canDonate = donorSurvey(scanner);
+                    boolean canDonate = donorSurvey();
                     if (canDonate) {
                         System.out.println("\n✅ Ви можете стати донором!");
                         System.out.print("📅 Бажаєте запланувати здачу крові? (так/ні): ");
@@ -43,52 +45,51 @@ class Donor extends User {
                         System.out.println("\n❌ Ви не можете бути донором. Рекомендуємо звернутися до лікаря.");
                     }
                 }
-                case 2 -> System.out.println("📜 Історія здачі крові...");
+                case 2 -> System.out.println("📜 Історія здачі крові... (тут може бути база даних)");
                 case 3 -> System.out.println("📌 Ви вийшли.");
                 default -> System.out.println("❌ Невірний вибір!");
             }
         } while (choice != 3);
     }
 
-    private boolean donorSurvey(Scanner scanner) {
+    private boolean donorSurvey() {
         System.out.println("\n📋 Опитування для донорства крові:");
 
-        int age = getValidIntInput(scanner, "👤 Ваш вік (18-60 років): ");
+        int age = getValidIntInput("👤 Ваш вік (18-60 років): ");
         if (age < 18 || age > 60) {
             System.out.println("❌ Вік не підходить для донорства.");
             return false;
         }
 
-        int weight = getValidIntInput(scanner, "⚖ Ваша вага (не менше 50 кг): ");
+        int weight = getValidIntInput("⚖️ Ваша вага (не менше 50 кг): ");
         if (weight < 50) {
             System.out.println("❌ Вага занадто мала для безпечного донорства.");
             return false;
         }
 
-        if (askYes(scanner, "💊 Чи приймаєте ви ліки?")) {
+        if (askYes("💊 Чи приймаєте ви ліки?")) {
             System.out.println("❌ Прийом ліків може впливати на якість крові.");
             return false;
         }
 
-        if (askYes(scanner, "🦠 Чи хворіли ви на інфекційні хвороби за останні 6 місяців?")) {
+        if (askYes("🦠 Чи хворіли ви на інфекційні хвороби за останні 6 місяців?")) {
             System.out.println("❌ Інфекційні хвороби є протипоказанням.");
             return false;
         }
 
-        if (askYes(scanner, "💉 Чи робили ви вакцинацію за останні 30 днів?")) {
+        if (askYes("💉 Чи робили ви вакцинацію за останні 30 днів?")) {
             System.out.println("❌ Вакцинація впливає на склад крові.");
             return false;
         }
 
-        if (askYes(scanner, "🩸 Чи здавали ви кров за останні 2 місяці?")) {
+        if (askYes("🩸 Чи здавали ви кров за останні 2 місяці?")) {
             System.out.println("❌ Недостатньо часу пройшло з останньої здачі.");
             return false;
         }
-
         return true;
     }
 
-    private int getValidIntInput(Scanner scanner, String prompt) {
+    private int getValidIntInput(String prompt) {
         System.out.print(prompt);
         while (!scanner.hasNextInt()) {
             System.out.println("❌ Введіть коректне число.");
@@ -98,7 +99,7 @@ class Donor extends User {
         return scanner.nextInt();
     }
 
-    private boolean askYes(Scanner scanner, String question) {
+    private boolean askYes(String question) {
         System.out.print(question + " (так/ні): ");
         String response = scanner.next().trim().toLowerCase();
         return response.equals("так");

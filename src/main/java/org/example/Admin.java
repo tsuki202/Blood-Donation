@@ -2,17 +2,16 @@ package org.example;
 
 import java.util.Scanner;
 
+@Role("ADMIN")
 public class Admin extends User {
-
-    public Admin(String username, Registration registration) {
-        super(username, "ADMIN", registration);
+    public Admin(String username, String role, Registration registration) {
+        super(username,role, registration);
     }
 
     @Override
     public void showMenu() {
         Scanner scanner = new Scanner(System.in);
         int choice;
-
         do {
             System.out.println("📌 Ви зайшли як АДМІН.");
             System.out.println("1 - Переглянути список користувачів");
@@ -20,26 +19,24 @@ public class Admin extends User {
             System.out.println("3 - Вийти");
             System.out.print("Оберіть дію: ");
 
-            while (!scanner.hasNextInt()) { // Перевірка на коректний ввід
+            while (!scanner.hasNextInt()) {
                 System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
                 scanner.next();
             }
-
             choice = scanner.nextInt();
-            scanner.nextLine(); // Очистка буфера
+            scanner.nextLine();
 
             switch (choice) {
                 case 1 -> registration.listUsers();
-                case 2 -> deleteUser();
-                case 3 -> System.out.println("📌 Вихід з режиму адміністратора.");
+                case 2 -> deleteUser(scanner);
+                case 3 -> exit();
                 default -> System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
             }
         } while (choice != 3);
     }
 
-    private void deleteUser() {
+    private void deleteUser(Scanner scanner) {
         System.out.print("Введіть логін користувача для видалення: ");
-        Scanner scanner = new Scanner(System.in);
         String usernameToDelete = scanner.nextLine();
         registration.deleteUser(usernameToDelete);
     }
