@@ -1,114 +1,144 @@
-package org.example;
-
-import java.util.*;
-
-public class AuthManager {
-    private final Scanner scanner;
-    private final Registration registration;
-
-    public AuthManager() {
-        this.scanner = new Scanner(System.in);
-        this.registration = new Registration();
-    }
+class AuthManager {
+    private final Scanner scanner = new Scanner(System.in);
 
     public void start() {
         while (true) {
-            System.out.println("\n🔹 Вітаємо у системі донорства крові!");
-            System.out.println("1 - Реєстрація");
-            System.out.println("2 - Вхід");
-            System.out.println("3 - Вийти");
+            System.out.println("\n📌 Оберіть дію:");
+            System.out.println("1️⃣ - Вхід");
+            System.out.println("2️⃣ - Реєстрація");
+            System.out.println("3️⃣ - Вихід");
+            System.out.print("🔹 Ваш вибір: ");
 
-            System.out.print("Оберіть опцію: ");
-            int choice = getIntInput();
+            String input = scanner.nextLine();
+            if (!input.matches("\\d+")) {
+                System.out.println("❌ Невірний ввід. Введіть число.");
+                continue;
+            }
+
+            int choice = Integer.parseInt(input);
 
             switch (choice) {
-                case 1 -> registerUser();
-                case 2 -> loginUser();
-                case 3 -> {
-                    System.out.println("👋 Дякуємо за використання! До побачення.");
-                    return;
-                }
+                case 1 -> loginUser();
+                case 2 -> registerUser();
+                case 3 -> exitProgram();
                 default -> System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
             }
         }
     }
 
-    private void registerUser() {
-        System.out.print("👤 Введіть логін: ");
-        String username = scanner.nextLine();
-
-        if (registration.userExists(username)) {
-            System.out.println("⚠ Користувач із таким логіном вже існує!");
-            return;
-        }
-
-        System.out.print("🔑 Введіть пароль: ");
-        String password = scanner.nextLine();
-
-        System.out.println("🆔 Оберіть роль:");
-        System.out.println("1 - Донор");
-        System.out.println("2 - Реципієнт");
-        System.out.println("3 - Адмін");
-        System.out.print("Ваш вибір: ");
-        int roleChoice = getIntInput();
-
-        String role = switch (roleChoice) {
-            case 1 -> "ДОНОР";
-            case 2 -> "РЕЦИПІЄНТ";
-            case 3 -> "ADMIN";
-            default -> {
-                System.out.println("❌ Невірний вибір! Реєстрацію скасовано.");
-                yield null;
-            }
-        };
-
-        if (role != null) {
-            registration.register(username, password, role);
-        }
-    }
-
     private void loginUser() {
-        System.out.print("👤 Введіть логін: ");
-        String username = scanner.nextLine();
-
-        if (!registration.userExists(username)) {
-            System.out.println("❌ Користувача не знайдено!");
-            return;
-        }
-
+        System.out.print("\n👤 Введіть логін: ");
+        String login = scanner.nextLine().trim();
         System.out.print("🔑 Введіть пароль: ");
         String password = scanner.nextLine();
 
-        if (!password.equals(registration.getPassword(username))) {
-            System.out.println("❌ Неправильний пароль!");
-            return;
+        DatabaseManager.getUserByLogin(login).ifPresentOrElse(user -> {
+            if (user.getPassword().equals(password)) {
+                System.out.println("✅ Вхід успішний!");
+                switch (user.getRole().toUpperCase()) {
+                    case "ADMIN" -> new Admin(user.getId(), user.getUsername()).showMenu();
+                    case "DONOR" -> Optional.ofNullable(Donor.fromDatabase(user.getId(), user.getUsername())).ifPresent(Donor::showMenu);
+                    case "RECIPIENT" -> Optional.ofNullable(Recipient.fromDatabase(user.getId(), user.getUsername())).ifPresent(Recipient::showMenu);
+                    default -> System.out.println("👤 Ви увійшли як " + user.getRole() + ". Немає додаткового меню.");
+                }
+            } else {
+                System.out.println("❌ Невірний пароль.");
+            }
+        }, () -> System.out.println("❌ Користувач не знайдений."));
+    }
+
+    private void registerUser() {
+        System.out.print("\n🆕 Введіть логін: ");
+        String login = scanner.nextLine().trim();
+        System.out.print("🔐 Введіть пароль: ");
+        String password = scanner.nextLine();
+
+        String role = null;
+        while (role == null) {
+            System.out.println("🎾 Оберіть роль:");
+            System.out.println("1 - Адмін");
+            System.out.println("2 - Донор");
+            System.out.println("3 - Реципієнт");
+            System.out.print("Ваш вибір: ");
+
+            String input = scanner.nextLine();
+            switch (input) {
+                case "1" -> role = "ADMIN";
+                case "2" -> role = "DONOR";
+                case "3" -> role = "RECIPIENT";
+                default -> System.out.println("❌ Невірний вибір. Спробуйте ще раз.");
+            }
         }
 
-        String role = registration.getRole(username);
-        User user = switch (role) {
-            case "ДОНОР" -> new Donor(username, role,registration);
-            case "РЕЦИПІЄНТ" -> new Recipient(username, role,registration);
-            case "ADMIN" -> new Admin(username, role,registration);
-            default -> null;
-        };
+        DatabaseManager.registerUser(login, password, role);
+    }
 
-        if (user != null) {
-            user.showMenu();
-        } else {
-            System.out.println("❌ Помилка визначення ролі!");
+    private void exitProgram() {
+        System.out.println("👋 До побачення!");
+        System.exit(0);
+    }
+
+    public void displayUsersByRole() {
+        while (true) {
+            System.out.println("\n📋 Оберіть роль для перегляду:");
+            System.out.println("1 - Адміни");
+            System.out.println("2 - Донори");
+            System.out.println("3 - Реципієнти");
+            System.out.println("4 - Вихід");
+            System.out.print("Ваш вибір: ");
+
+            String input = scanner.nextLine();
+            switch (input) {
+                case "1" -> DatabaseManager.printUsersByRole("ADMIN");
+                case "2" -> DatabaseManager.printUsersByRole("DONOR");
+                case "3" -> DatabaseManager.printUsersByRole("RECIPIENT");
+                case "4" -> {
+                    return;
+                }
+                default -> System.out.println("❌ Невірний вибір. Спробуйте ще раз.");
+            }
         }
     }
 
-    private int getIntInput() {
-        while (!scanner.hasNextInt()) {
-            System.out.println("❌ Введіть число!");
-            scanner.next();
+    public void deleteUserByRole() {
+        while (true) {
+            System.out.println("\n🗑️ Оберіть роль користувача для видалення:");
+            System.out.println("1 - Адміни");
+            System.out.println("2 - Донори");
+            System.out.println("3 - Реципієнти");
+            System.out.println("4 - Вихід");
+            System.out.print("Ваш вибір: ");
+
+            String input = scanner.nextLine();
+            switch (input) {
+                case "1", "2", "3" -> {
+                    String role = switch (input) {
+                        case "1" -> "ADMIN";
+                        case "2" -> "DONOR";
+                        case "3" -> "RECIPIENT";
+                        default -> throw new IllegalStateException("Unexpected value: " + input);
+                    };
+                    DatabaseManager.printUsersByRole(role);
+                    System.out.print("Введіть логін користувача для видалення: ");
+                    String login = scanner.nextLine();
+                    boolean success = DatabaseManager.deleteUserByLoginAndRole(login, role);
+                    if (success) {
+                        System.out.println("✅ Користувача видалено.");
+                        DatabaseManager.printUsersByRole(role);
+                    } else {
+                        System.out.println("❌ Користувача з таким логіном не знайдено або не відповідає ролі.");
+                    }
+                }
+                case "4" -> {
+                    return;
+                }
+                default -> System.out.println("❌ Невірний вибір. Спробуйте ще раз.");
+            }
         }
-        int input = scanner.nextInt();
-        scanner.nextLine(); // очищення буфера
-        return input;
     }
 }
+
+
 
 
 

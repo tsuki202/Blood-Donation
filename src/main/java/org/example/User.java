@@ -4,9 +4,12 @@ import java.util.Scanner;
 import lombok.*;
 @AllArgsConstructor
 abstract class User implements UserAction{
+    protected int id;
     protected String username;
     protected String role;
-    protected Registration registration;
+
+
+
     protected void exit() {
         System.out.println("📌 Ви вийшли з акаунта.");
     }
