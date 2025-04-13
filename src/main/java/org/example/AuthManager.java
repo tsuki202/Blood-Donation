@@ -1,9 +1,14 @@
+package org.example;
+
+import java.util.Optional;
+import java.util.Scanner;
+
 class AuthManager {
     private final Scanner scanner = new Scanner(System.in);
 
     public void start() {
         while (true) {
-            System.out.println("\n📌 Оберіть дію:");
+            System.out.println("\n\uD83D\uDCCC Оберіть дію:");
             System.out.println("1️⃣ - Вхід");
             System.out.println("2️⃣ - Реєстрація");
             System.out.println("3️⃣ - Вихід");
@@ -27,9 +32,9 @@ class AuthManager {
     }
 
     private void loginUser() {
-        System.out.print("\n👤 Введіть логін: ");
+        System.out.print("\n\uD83D\uDC64 Введіть логін: ");
         String login = scanner.nextLine().trim();
-        System.out.print("🔑 Введіть пароль: ");
+        System.out.print("\uD83D\uDD11 Введіть пароль: ");
         String password = scanner.nextLine();
 
         DatabaseManager.getUserByLogin(login).ifPresentOrElse(user -> {
@@ -39,7 +44,7 @@ class AuthManager {
                     case "ADMIN" -> new Admin(user.getId(), user.getUsername()).showMenu();
                     case "DONOR" -> Optional.ofNullable(Donor.fromDatabase(user.getId(), user.getUsername())).ifPresent(Donor::showMenu);
                     case "RECIPIENT" -> Optional.ofNullable(Recipient.fromDatabase(user.getId(), user.getUsername())).ifPresent(Recipient::showMenu);
-                    default -> System.out.println("👤 Ви увійшли як " + user.getRole() + ". Немає додаткового меню.");
+                    default -> System.out.println("\uD83D\uDC64 Ви увійшли як " + user.getRole() + ". Немає додаткового меню.");
                 }
             } else {
                 System.out.println("❌ Невірний пароль.");
@@ -48,14 +53,14 @@ class AuthManager {
     }
 
     private void registerUser() {
-        System.out.print("\n🆕 Введіть логін: ");
+        System.out.print("\n\uD83C\uDD95 Введіть логін: ");
         String login = scanner.nextLine().trim();
-        System.out.print("🔐 Введіть пароль: ");
+        System.out.print("\uD83D\uDD10 Введіть пароль: ");
         String password = scanner.nextLine();
 
         String role = null;
         while (role == null) {
-            System.out.println("🎾 Оберіть роль:");
+            System.out.println("\uD83C\uDFBE Оберіть роль:");
             System.out.println("1 - Адмін");
             System.out.println("2 - Донор");
             System.out.println("3 - Реципієнт");
@@ -70,17 +75,22 @@ class AuthManager {
             }
         }
 
-        DatabaseManager.registerUser(login, password, role);
+        boolean success = DatabaseManager.registerUser(login, password, role);
+        if (success) {
+            System.out.println("✅ Реєстрація успішна.");
+        } else {
+            System.out.println("❌ Помилка при реєстрації. Можливо, логін вже існує.");
+        }
     }
 
     private void exitProgram() {
-        System.out.println("👋 До побачення!");
+        System.out.println("\uD83D\uDC4B До побачення!");
         System.exit(0);
     }
 
     public void displayUsersByRole() {
         while (true) {
-            System.out.println("\n📋 Оберіть роль для перегляду:");
+            System.out.println("\n\uD83D\uDCCB Оберіть роль для перегляду:");
             System.out.println("1 - Адміни");
             System.out.println("2 - Донори");
             System.out.println("3 - Реципієнти");
@@ -102,7 +112,7 @@ class AuthManager {
 
     public void deleteUserByRole() {
         while (true) {
-            System.out.println("\n🗑️ Оберіть роль користувача для видалення:");
+            System.out.println("\n\uD83D\uDDD1️ Оберіть роль користувача для видалення:");
             System.out.println("1 - Адміни");
             System.out.println("2 - Донори");
             System.out.println("3 - Реципієнти");
@@ -137,6 +147,7 @@ class AuthManager {
         }
     }
 }
+
 
 
 

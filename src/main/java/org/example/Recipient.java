@@ -3,7 +3,7 @@ import java.sql.*;
 import java.util.Scanner;
 
 @Role("RECIPIENT")
-class Recipient extends User {
+public class Recipient extends User {
     private String name;
     private String surname;
     private int year;

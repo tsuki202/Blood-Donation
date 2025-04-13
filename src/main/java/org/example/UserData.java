@@ -4,7 +4,7 @@ import lombok.*;
 
 @Data
 @AllArgsConstructor
-class UserData {
+public class UserData {
     private int id;
     private String username;
     private String password;

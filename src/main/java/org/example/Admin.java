@@ -3,7 +3,7 @@ package org.example;
 import java.util.Scanner;
 
 @Role("ADMIN")
-class Admin extends User {
+public class Admin extends User {
     public Admin(int id, String username) {
         super(id, username, "ADMIN");
     }
@@ -63,11 +63,11 @@ class Admin extends User {
 
             if (selectedRole != null) {
                 if (action.equals("view")) {
-                    DatabaseManager.listUsersByRole(selectedRole);
+                    DatabaseManager.deleteUserByLoginAndRole(selectedRole);
                 } else if (action.equals("delete")) {
                     System.out.print("Введіть логін користувача для видалення: ");
                     String loginToDelete = scanner.nextLine();
-                    DatabaseManager.deleteUserByLogin(loginToDelete);
+                    DatabaseManager.deleteUserByLoginAndRole(loginToDelete);
                 }
             }
         } while (subChoice != 4);

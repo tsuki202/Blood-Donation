@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import java.sql.*;
 import java.util.Scanner;
 @Role("DONOR")
-class Donor extends User {
+public class Donor extends User {
     private String name;
     private String surname;
     private int year;
