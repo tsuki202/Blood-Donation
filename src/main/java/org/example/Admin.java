@@ -2,74 +2,96 @@ package org.example;
 
 import java.util.Scanner;
 
-@Role("ADMIN")
-public class Admin extends User {
+public class Admin {
+    private final int id;
+    private final String username;
+    private final Scanner scanner = new Scanner(System.in);
+
     public Admin(int id, String username) {
-        super(id, username, "ADMIN");
+        this.id = id;
+        this.username = username;
     }
 
-    @Override
     public void showMenu() {
-        Scanner scanner = new Scanner(System.in);
-        int choice;
-        do {
-            System.out.println("\uD83D\uDCCC Ви зайшли як АДМІН.");
-            System.out.println("1 - Переглянути список користувачів");
+        while (true) {
+            System.out.println("\n\uD83D\uDCBC Адмін-меню:");
+            System.out.println("1 - Переглянути користувачів за ролями");
             System.out.println("2 - Видалити користувача");
-            System.out.println("3 - Вийти");
-            System.out.print("Оберіть дію: ");
+            System.out.println("3 - Вийти в головне меню");
+            System.out.print("Ваш вибір: ");
+            String input = scanner.nextLine();
 
-            while (!scanner.hasNextInt()) {
-                System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
-                scanner.next();
+            switch (input) {
+                case "1" -> displayUsersByRole();
+                case "2" -> deleteUserByRole();
+                case "3" -> {
+                    return;
+                }
+                default -> System.out.println("❌ Невірний вибір. Спробуйте ще раз.");
             }
-
-            choice = scanner.nextInt();
-            scanner.nextLine();
-
-            switch (choice) {
-                case 1 -> selectUserRoleForAction("view");
-                case 2 -> selectUserRoleForAction("delete");
-                case 3 -> System.out.println("\uD83D\uDCCC Вихід з режиму адміністратора.");
-                default -> System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
-            }
-        } while (choice != 3);
+        }
     }
 
-    private void selectUserRoleForAction(String action) {
-        Scanner scanner = new Scanner(System.in);
-        int subChoice;
-        do {
-            System.out.println("Оберіть роль користувача:");
-            System.out.println("1 - Адміністратори");
+    private void displayUsersByRole() {
+        while (true) {
+            System.out.println("\n\uD83D\uDCCB Оберіть роль для перегляду:");
+            System.out.println("1 - Адміни");
             System.out.println("2 - Донори");
             System.out.println("3 - Реципієнти");
-            System.out.println("4 - Вихід");
+            System.out.println("4 - Назад");
             System.out.print("Ваш вибір: ");
 
-            while (!scanner.hasNextInt()) {
-                System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
-                scanner.next();
-            }
-            subChoice = scanner.nextInt();
-            scanner.nextLine();
-
-            String selectedRole = switch (subChoice) {
-                case 1 -> "ADMIN";
-                case 2 -> "DONOR";
-                case 3 -> "RECIPIENT";
-                default -> null;
-            };
-
-            if (selectedRole != null) {
-                if (action.equals("view")) {
-                    DatabaseManager.deleteUserByLoginAndRole(selectedRole);
-                } else if (action.equals("delete")) {
-                    System.out.print("Введіть логін користувача для видалення: ");
-                    String loginToDelete = scanner.nextLine();
-                    DatabaseManager.deleteUserByLoginAndRole(loginToDelete);
+            String input = scanner.nextLine();
+            switch (input) {
+                case "1" -> DatabaseManager.printUsersByRole("ADMIN");
+                case "2" -> DatabaseManager.printUsersByRole("DONOR");
+                case "3" -> DatabaseManager.printUsersByRole("RECIPIENT");
+                case "4" -> {
+                    return;
                 }
+                default -> System.out.println("❌ Невірний вибір.");
             }
-        } while (subChoice != 4);
+        }
+    }
+
+    private void deleteUserByRole() {
+        while (true) {
+            System.out.println("\n\uD83D\uDDD1️ Оберіть роль користувача для видалення:");
+            System.out.println("1 - Адміни");
+            System.out.println("2 - Донори");
+            System.out.println("3 - Реципієнти");
+            System.out.println("4 - Назад");
+            System.out.print("Ваш вибір: ");
+
+            String input = scanner.nextLine();
+            String role = null;
+
+            if (input.equals("1")) {
+                role = "ADMIN";
+            } else if (input.equals("2")) {
+                role = "DONOR";
+            } else if (input.equals("3")) {
+                role = "RECIPIENT";
+            } else if (input.equals("4")) {
+                break; // вихід із методу
+            } else {
+                System.out.println("❌ Невірний вибір.");
+                continue; // повертаємось до початку циклу
+            }
+
+            // Виводимо список користувачів з обраною роллю
+            DatabaseManager.printUsersByRole(role);
+
+            System.out.print("Введіть логін користувача для видалення: ");
+            String login = scanner.nextLine();
+
+            boolean success = DatabaseManager.deleteUserByLoginAndRole(login, role);
+            if (success) {
+                System.out.println("✅ Користувача видалено.");
+                DatabaseManager.printUsersByRole(role); // Показати оновлений список
+            } else {
+                System.out.println("❌ Користувача з таким логіном не знайдено або не відповідає ролі.");
+            }
+        }
     }
 }
