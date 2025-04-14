@@ -31,9 +31,7 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files>
-      <object connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" object-ref="schemas/users/tables/admins" />
-    </open-files>
+    <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="3ded65d4-e538-4962-bce0-66f277424ea3" />
@@ -88,7 +86,7 @@
           <description value="" />
           <database-type value="MYSQL" />
           <config-type value="BASIC" />
-          <database-version value="8.0" />
+          <database-version value="9.2" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />

@@ -73,5 +73,36 @@ public class DatabaseManager {
             return false;
         }
     }
+
+    // Додати ці методи до класу DatabaseManager
+
+    public static boolean updateDonorInfo(int id, int weight, int height) {
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE donors SET weight = ?, height = ? WHERE id = ?");
+            stmt.setInt(1, weight);
+            stmt.setInt(2, height);
+            stmt.setInt(3, id);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("❌ Помилка при оновленні даних донора: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean createDonationRecord(int donorId, Date donationDate, int amount, String location) {
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO donations (donor_id, donation_date, amount, location) VALUES (?, ?, ?, ?)");
+            stmt.setInt(1, donorId);
+            stmt.setDate(2, donationDate);
+            stmt.setInt(3, amount);
+            stmt.setString(4, location);
+            return stmt.executeUpdate() > 0;
+        } catch (Exception e) {
+            System.out.println("❌ Помилка при створенні запису про донацію: " + e.getMessage());
+            return false;
+        }
+    }
 }
 
