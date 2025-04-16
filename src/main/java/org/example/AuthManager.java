@@ -3,7 +3,6 @@ package org.example;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Optional;
 import java.util.Scanner;
 
 class AuthManager {

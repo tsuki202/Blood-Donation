@@ -37,8 +37,18 @@
     <connection id="3ded65d4-e538-4962-bce0-66f277424ea3" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
+    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.donations" active-filter-id="EMPTY_FILTER">
+      <filter id="e9408a9a-e6be-401f-a8a6-ef2b6cae1bff" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="id" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
     <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.recipients" active-filter-id="EMPTY_FILTER">
       <filter id="b74e7a88-5100-4ac0-a526-e826bf376ce6" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="id" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
+    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.donor_questionnaires" active-filter-id="EMPTY_FILTER">
+      <filter id="81d8f99d-19d5-4876-8b55-c7ceca723c1c" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="id" operator="=" value="" active="true" />
       </filter>
     </filter-actions>
@@ -59,6 +69,16 @@
     </filter-actions>
     <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.admins" active-filter-id="EMPTY_FILTER">
       <filter id="703a1db0-60f9-45b3-b61a-e3dd63aa0b9d" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="id" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
+    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.donation_schedule" active-filter-id="EMPTY_FILTER">
+      <filter id="59c66607-5697-4090-b139-8d5e3c53e38e" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
+        <condition column="id" operator="=" value="" active="true" />
+      </filter>
+    </filter-actions>
+    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.recipient_requests" active-filter-id="EMPTY_FILTER">
+      <filter id="8ea8dd23-2fb0-4818-82f2-5bfb698b4eca" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="id" operator="=" value="" active="true" />
       </filter>
     </filter-actions>
@@ -86,7 +106,7 @@
           <description value="" />
           <database-type value="MYSQL" />
           <config-type value="BASIC" />
-          <database-version value="9.2" />
+          <database-version value="8.0" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />

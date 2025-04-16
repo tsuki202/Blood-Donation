@@ -1,84 +1,118 @@
 @startuml
 'https://plantuml.com/class-diagram
+    class User {
+        #int id
+        #String username
+        #String role
+        +User(int id, String username, String role)
+        +exit()
+        +abstract showMenu()
+    }
 
-interface UserAction {
-    + showMenu()
-}
+    class UserData {
+        -int id
+        -String username
+        -String password
+        -String role
+    }
 
-class User {
-    - String username
-    - String role
-    - Registration registration
-    + void exit()
-}
+    class Admin {
+        -int id
+        -String username
+        -Scanner scanner
+        +Admin(int id, String username)
+        +showMenu()
+        -displayUsersByRole()
+        -deleteUserByRole()
+        -manageRecipientRequests()
+        -viewRecipientRequests(String filter)
+        -respondToRequest()
+    }
 
-UserAction <|.. User
+    class Donor {
+        -String name
+        -String surname
+        -int year
+        -String bloodType
+        -int weight
+        -int height
+        +Donor(int id, String username, String name, String surname, int year, String bloodType, int weight, int height)
+        +showMenu()
+        -viewMyData()
+        -updatePersonalData(Scanner scanner)
+        -fillDonorQuestionnaire()
+        -viewDonationHistory()
+        -scheduleDonation()
+        +static fromDatabase(int id, String username)
+    }
 
-class Admin {
-    + Admin(String username, String role, Registration registration)
-    + void showMenu()
-    - void deleteUser(Scanner scanner)
-}
+    class Recipient {
+        -String name
+        -String surname
+        -int year
+        -String neededBloodType
+        -Date requestDate
+        -Date validUntil
+        -String medicalCondition
+        +Recipient(int id, String username, String name, String surname, int year, String neededBloodType, Date requestDate, Date validUntil, String medicalCondition)
+        +showMenu()
+        -viewMyData()
+        -updatePersonalData(Scanner scanner)
+        -searchDonorsByBloodType()
+        -checkRequestStatus()
+        -createNewRequest()
+        -updateMedicalInfo()
+        +static fromDatabase(int id, String username)
+    }
 
-User <|-- Admin
+    class AuthManager {
+        -Scanner scanner
+        +start()
+        -loginUser()
+        -registerUser()
+        -createInitialDonorRecord(int userId, String username)
+        -createInitialRecipientRecord(int userId, String username)
+        -exitProgram()
+        +displayUsersByRole()
+        +deleteUserByRole()
+    }
 
-class Recipient {
-    + Recipient(String username, String role, Registration registration)
-    + void showMenu()
-}
+    class DatabaseManager {
+        +static initializeDatabase()
+        +static getConnection()
+        +static getUserByLogin(String login)
+        +static printUsersByRole(String role)
+        +static deleteUserByLoginAndRole(String login, String role)
+        +static registerUser(String login, String password, String role)
+        +static createRecipientRequest(int recipientId, String notes)
+    }
 
-User <|-- Recipient
+    class Main {
+        +static main(String[] args)
+    }
 
-class Donor {
-    + Donor(String username, String role, Registration registration)
-    + void showMenu()
-    - boolean donorSurvey()
-    - int getValidIntInput(String prompt)
-    - boolean askYes(String question)
-}
+    interface UserAction {
+        +showMenu()
+    }
 
-User <|-- Donor
+    class Role {
+        +String value()
+    }
 
-class Registration {
-    - List<UserData> users
-    + Registration()
-    + void register(String username, String password, String role)
-    + boolean userExists(String username)
-    + String getPassword(String username)
-    + String getRole(String username)
-    + void deleteUser(String username)
-    + void listUsers()
-    - void saveUsers()
-    - void loadUsers()
-}
-
-class UserData {
-    - String username
-    - String password
-    - String role
-}
-
-Registration o-- UserData
-
-class AuthManager {
-    - Scanner scanner
-    - Registration registration
-    + AuthManager()
-    + void start()
-    - void registerUser()
-    - void loginUser()
-    - int getIntInput()
-}
-
-class Main {
-    + main(String[] args)
-}
-
-Main --> AuthManager : "uses"
-Admin --> Registration : "manages users"
-Donor --> Registration : "registers & checks status"
-Recipient --> Registration : "requests blood"
-User --> Registration : "linked to"
+    User --|> UserAction : implements
+    Admin --|> User : extends
+    Donor --|> User : extends
+    Recipient --|> User : extends
+    Role ..> Donor : annotates
+    Role ..> Recipient : annotates
+    Main --> AuthManager : creates
+    AuthManager --> Admin : creates
+    AuthManager --> Donor : creates
+    AuthManager --> Recipient : creates
+    DatabaseManager <-- Admin : uses
+    DatabaseManager <-- Donor : uses
+    DatabaseManager <-- Recipient : uses
+    DatabaseManager <-- AuthManager : uses
 
 @enduml
 

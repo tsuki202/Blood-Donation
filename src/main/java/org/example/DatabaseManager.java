@@ -272,4 +272,73 @@ public class DatabaseManager {
             return false;
         }
     }
+    public static boolean createRecipientRequest(int recipientId, String notes) {
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO recipient_requests (recipient_id, status, response_date, notes) " +
+                            "VALUES (?, 'pending', NULL, ?)");
+            stmt.setInt(1, recipientId);
+            stmt.setString(2, notes);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("❌ Помилка при створенні запиту: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static boolean updateRequestStatus(int requestId, String status, String adminComment) {
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE recipient_requests SET status = ?, notes = CONCAT(notes, '\n--\nВідповідь адміна: ', ?), " +
+                            "response_date = CURRENT_DATE WHERE id = ?");
+            stmt.setString(1, status);
+            stmt.setString(2, adminComment);
+            stmt.setInt(3, requestId);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.out.println("❌ Помилка при оновленні статусу запиту: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static void printPendingRequests() {
+        try (Connection conn = getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT rr.id, r.id AS recipient_id, u.login, r.name, r.surname, " +
+                            "r.needed_blood_type, rr.notes, rr.status " +
+                            "FROM recipient_requests rr " +
+                            "JOIN recipients r ON rr.recipient_id = r.id " +
+                            "JOIN users u ON r.id = u.id " +
+                            "WHERE rr.status = 'pending' " +
+                            "ORDER BY rr.id DESC");
+
+            ResultSet rs = stmt.executeQuery();
+            boolean hasRequests = false;
+
+            System.out.println("\n📋 Нові запити від реципієнтів:");
+
+            while (rs.next()) {
+                hasRequests = true;
+                int requestId = rs.getInt("id");
+                String login = rs.getString("login");
+                String name = rs.getString("name");
+                String surname = rs.getString("surname");
+                String bloodType = rs.getString("needed_blood_type");
+                String notes = rs.getString("notes");
+
+                System.out.println("\n🔹 Запит #" + requestId);
+                System.out.println("Логін: " + login);
+                System.out.println("Ім'я: " + name + " " + surname);
+                System.out.println("Необхідна група крові: " + bloodType);
+                System.out.println("Запит: " + notes);
+            }
+
+            if (!hasRequests) {
+                System.out.println("Немає нових запитів.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("❌ Помилка при отриманні запитів: " + e.getMessage());
+        }
+    }
 }

@@ -180,18 +180,32 @@ public class Recipient extends User {
     private void checkRequestStatus() {
         try (Connection conn = DatabaseManager.getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT status, response_date, notes FROM recipient_requests WHERE recipient_id = ?");
+                    "SELECT id, status, response_date, notes FROM recipient_requests WHERE recipient_id = ? ORDER BY id DESC");
 
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                System.out.println("\n📋 Статус вашого запиту:");
-                System.out.println("Статус: " + rs.getString("status"));
-                System.out.println("Дата відповіді: " + rs.getDate("response_date"));
-                System.out.println("Примітки: " + rs.getString("notes"));
-            } else {
-                System.out.println("\nℹ️ У вас поки немає запитів або ваш запит ще обробляється.");
+            boolean hasRequests = false;
+            System.out.println("\n📋 Статус ваших запитів:");
+
+            while (rs.next()) {
+                hasRequests = true;
+                int requestId = rs.getInt("id");
+                String status = rs.getString("status");
+                Date responseDate = rs.getDate("response_date");
+                String notes = rs.getString("notes");
+
+                System.out.println("\n🔹 Запит #" + requestId);
+                System.out.println("Статус: " + status);
+                if (responseDate != null) {
+                    System.out.println("Дата відповіді: " + responseDate);
+                }
+                System.out.println("Деталі: " + notes);
+                System.out.println("-----------------");
+            }
+
+            if (!hasRequests) {
+                System.out.println("\nℹ️ У вас поки немає запитів.");
 
                 // Пропонуємо створити запит, якщо його немає
                 System.out.print("Бажаєте створити новий запит? (Так/Ні): ");
@@ -199,29 +213,54 @@ public class Recipient extends User {
                 String answer = scanner.nextLine();
 
                 if (answer.equalsIgnoreCase("Так")) {
-                    System.out.println("\n📝 Створення запиту реципієнта");
-                    System.out.print("Опишіть ваш запит: ");
-                    String notes = scanner.nextLine();
+                    createNewRequest();
+                }
+            } else {
+                // Якщо вже є запити, пропонуємо створити ще один
+                System.out.print("\nБажаєте створити ще один запит? (Так/Ні): ");
+                Scanner scanner = new Scanner(System.in);
+                String answer = scanner.nextLine();
 
-                    try {
-                        PreparedStatement createStmt = conn.prepareStatement(
-                                "INSERT INTO recipient_requests (recipient_id, status, response_date, notes) VALUES (?, 'pending', NULL, ?)");
-                        createStmt.setInt(1, id);
-                        createStmt.setString(2, notes);
-
-                        if (createStmt.executeUpdate() > 0) {
-                            System.out.println("✅ Запит успішно створено! Очікуйте на відповідь.");
-                        } else {
-                            System.out.println("❌ Помилка при створенні запиту.");
-                        }
-                    } catch (Exception e) {
-                        System.out.println("❌ Помилка при створенні запиту: " + e.getMessage());
-                    }
+                if (answer.equalsIgnoreCase("Так")) {
+                    createNewRequest();
                 }
             }
         } catch (Exception e) {
             System.out.println("❌ Помилка при перевірці статусу: " + e.getMessage());
-            System.out.println("Перевірте, чи існує таблиця recipient_requests в базі даних.");
+        }
+    }
+
+    private void createNewRequest() {
+        System.out.println("\n📝 Створення запиту реципієнта");
+
+        // Перевіряємо, чи заповнені основні дані профілю
+        if (name == null || name.isEmpty() || neededBloodType == null || neededBloodType.isEmpty()) {
+            System.out.println("⚠️ Для створення запиту потрібно заповнити ваш профіль (ім'я та необхідну групу крові).");
+            System.out.print("Бажаєте заповнити профіль зараз? (Так/Ні): ");
+            Scanner scanner = new Scanner(System.in);
+            String answer = scanner.nextLine();
+
+            if (answer.equalsIgnoreCase("Так")) {
+                updatePersonalData(scanner);
+            } else {
+                return;
+            }
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Вкажіть деталі вашого запиту (необхідна допомога, терміновість, тощо):");
+        String notes = scanner.nextLine();
+
+        // Додаємо інформацію про групу крові та медичний стан до запиту
+        String fullNotes = "Група крові: " + neededBloodType + "\n" +
+                "Медичний стан: " + medicalCondition + "\n" +
+                "Запит: " + notes;
+
+        boolean success = DatabaseManager.createRecipientRequest(id, fullNotes);
+        if (success) {
+            System.out.println("✅ Запит успішно створено! Очікуйте на відповідь адміністратора.");
+        } else {
+            System.out.println("❌ Помилка при створенні запиту.");
         }
     }
 
