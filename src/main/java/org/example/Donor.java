@@ -27,12 +27,18 @@ public class Donor extends User {
         Scanner scanner = new Scanner(System.in);
         int choice;
         do {
-            System.out.println("\n🩸 Ви зайшли як Донор " + name + " " + surname);
+            System.out.println("\n🩸 Ви зайшли як Донор " + username);
+            if (name != null && !name.isEmpty()) {
+                System.out.println("Ім'я: " + name + " " + surname);
+            } else {
+                System.out.println("⚠️ Ваш профіль не заповнений. Рекомендуємо заповнити дані.");
+            }
             System.out.println("1 - Переглянути мої дані");
-            System.out.println("2 - Заповнити анкету донора");
-            System.out.println("3 - Переглянути історію донацій");
-            System.out.println("4 - Записатися на донацію");
-            System.out.println("5 - Вийти");
+            System.out.println("2 - Заповнити/оновити персональні дані");
+            System.out.println("3 - Заповнити анкету донора");
+            System.out.println("4 - Переглянути історію донацій");
+            System.out.println("5 - Записатися на донацію");
+            System.out.println("6 - Вийти");
             System.out.print("Оберіть дію: ");
 
             while (!scanner.hasNextInt()) {
@@ -45,16 +51,83 @@ public class Donor extends User {
 
             switch (choice) {
                 case 1 -> viewMyData();
-                case 2 -> fillDonorQuestionnaire();
-                case 3 -> viewDonationHistory();
-                case 4 -> scheduleDonation();
-                case 5 -> System.out.println("🩸 Вихід з меню донора.");
+                case 2 -> updatePersonalData(scanner);
+                case 3 -> fillDonorQuestionnaire();
+                case 4 -> viewDonationHistory();
+                case 5 -> scheduleDonation();
+                case 6 -> System.out.println("🩸 Вихід з меню донора.");
                 default -> System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
             }
-        } while (choice != 5);
+        } while (choice != 6);
+    }
+
+    private void updatePersonalData(Scanner scanner) {
+        System.out.println("\n📝 Оновлення персональних даних");
+
+        System.out.print("Введіть ваше ім'я: ");
+        String newName = scanner.nextLine().trim();
+        if (!newName.isEmpty()) {
+            this.name = newName;
+        }
+
+        System.out.print("Введіть ваше прізвище: ");
+        String newSurname = scanner.nextLine().trim();
+        if (!newSurname.isEmpty()) {
+            this.surname = newSurname;
+        }
+
+        System.out.print("Введіть рік народження: ");
+        String yearStr = scanner.nextLine().trim();
+        if (!yearStr.isEmpty() && yearStr.matches("\\d+")) {
+            this.year = Integer.parseInt(yearStr);
+        }
+
+        System.out.print("Введіть групу крові (наприклад, A+, B-, O+): ");
+        String newBloodType = scanner.nextLine().trim();
+        if (!newBloodType.isEmpty()) {
+            this.bloodType = newBloodType;
+        }
+
+        System.out.print("Введіть вагу (кг): ");
+        String weightStr = scanner.nextLine().trim();
+        if (!weightStr.isEmpty() && weightStr.matches("\\d+")) {
+            this.weight = Integer.parseInt(weightStr);
+        }
+
+        System.out.print("Введіть зріст (см): ");
+        String heightStr = scanner.nextLine().trim();
+        if (!heightStr.isEmpty() && heightStr.matches("\\d+")) {
+            this.height = Integer.parseInt(heightStr);
+        }
+
+        // Зберігаємо дані в базу
+        try (Connection conn = DatabaseManager.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "UPDATE donors SET name = ?, surname = ?, year = ?, blood_type = ?, weight = ?, height = ? WHERE id = ?");
+            stmt.setString(1, name);
+            stmt.setString(2, surname);
+            stmt.setInt(3, year);
+            stmt.setString(4, bloodType);
+            stmt.setInt(5, weight);
+            stmt.setInt(6, height);
+            stmt.setInt(7, id);
+
+            if (stmt.executeUpdate() > 0) {
+                System.out.println("✅ Дані успішно оновлено!");
+            } else {
+                System.out.println("❌ Помилка при оновленні даних.");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Помилка при оновленні даних: " + e.getMessage());
+        }
     }
 
     private void viewMyData() {
+        if (name == null || name.isEmpty()) {
+            System.out.println("\n⚠️ Ваш профіль ще не заповнений. Оберіть пункт меню '2' для заповнення даних.");
+            return;
+        }
+
         System.out.println("\n📋 Ваші дані:");
         System.out.println("Ім'я: " + name);
         System.out.println("Прізвище: " + surname);
@@ -71,11 +144,29 @@ public class Donor extends User {
 
         // 1. Загальна інформація
         System.out.println("\n🔹 1. Загальна інформація");
-        System.out.print("📌 Вік: " + (2023 - year));
-        System.out.print("\n📌 Вага (кг): ");
-        this.weight = Integer.parseInt(scanner.nextLine());
+        System.out.print("📌 Вік: ");
+        int age;
+        if (year > 0) {
+            age = java.time.Year.now().getValue() - year;
+            System.out.println(age);
+        } else {
+            System.out.print("Введіть ваш вік: ");
+            age = Integer.parseInt(scanner.nextLine());
+        }
+
+        System.out.print("📌 Вага (кг): ");
+        if (weight > 0) {
+            System.out.println(weight);
+        } else {
+            this.weight = Integer.parseInt(scanner.nextLine());
+        }
+
         System.out.print("📌 Зріст (см): ");
-        this.height = Integer.parseInt(scanner.nextLine());
+        if (height > 0) {
+            System.out.println(height);
+        } else {
+            this.height = Integer.parseInt(scanner.nextLine());
+        }
 
         // 2. Загальний стан здоров'я
         System.out.println("\n🔹 2. Загальний стан здоров'я");
@@ -102,8 +193,17 @@ public class Donor extends User {
         System.out.print("✅ Чи вживали ви алкоголь останні 48 годин? (Так/Ні): ");
         String alcohol = scanner.nextLine();
 
-        // Збереження анкети в базу даних
+        // Оновлення даних донора в таблиці donors
         try (Connection conn = DatabaseManager.getConnection()) {
+            // Спочатку оновлюємо інформацію в таблиці donors
+            PreparedStatement updateDonorStmt = conn.prepareStatement(
+                    "UPDATE donors SET weight = ?, height = ? WHERE id = ?");
+            updateDonorStmt.setInt(1, weight);
+            updateDonorStmt.setInt(2, height);
+            updateDonorStmt.setInt(3, id);
+            updateDonorStmt.executeUpdate();
+
+            // Потім зберігаємо анкету
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO donor_questionnaires (donor_id, weight, height, feels_good, had_symptoms, medications, " +
                             "chronic_diseases, allergies, recent_surgeries, tattoos, alcohol) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -175,6 +275,7 @@ public class Donor extends User {
             System.out.println("\n✅ Ви успішно записались на донацію!");
         } catch (Exception e) {
             System.out.println("❌ Помилка при записі на донацію: " + e.getMessage());
+            System.out.println("Перевірте правильність формату дати (yyyy-mm-dd) та повторіть спробу.");
         }
     }
 
@@ -183,20 +284,31 @@ public class Donor extends User {
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM donors WHERE id = ?");
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
+
             if (rs.next()) {
-                return new Donor(
-                        id, username,
-                        rs.getString("name"),
-                        rs.getString("surname"),
-                        rs.getInt("year"),
-                        rs.getString("blood_type"),
-                        rs.getInt("weight"),
-                        rs.getInt("height")
-                );
+                String name = rs.getString("name");
+                String surname = rs.getString("surname");
+                int year = rs.getInt("year");
+                String bloodType = rs.getString("blood_type");
+                int weight = rs.getInt("weight");
+                int height = rs.getInt("height");
+
+                return new Donor(id, username, name, surname, year, bloodType, weight, height);
+            } else {
+                // Якщо запис у таблиці donors не знайдено, створюємо новий запис
+                PreparedStatement insertStmt = conn.prepareStatement(
+                        "INSERT INTO donors (id, name, surname, year, blood_type, weight, height) VALUES (?, '', '', 0, '', 0, 0)");
+                insertStmt.setInt(1, id);
+                insertStmt.executeUpdate();
+
+                // Повертаємо новий об'єкт з порожніми полями
+                return new Donor(id, username, "", "", 0, "", 0, 0);
             }
         } catch (Exception e) {
-            System.out.println("❌ Не вдалося завантажити донора: " + e.getMessage());
+            System.out.println("❌ Помилка при створенні профілю донора: " + e.getMessage());
+            e.printStackTrace();
+            // Повертаємо об'єкт з базовими значеннями, щоб уникнути NullPointerException
+            return new Donor(id, username, "", "", 0, "", 0, 0);
         }
-        return null;
     }
-}
+}   

@@ -1,5 +1,8 @@
 package org.example;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Optional;
 import java.util.Scanner;
 
@@ -42,8 +45,32 @@ class AuthManager {
                 System.out.println("✅ Вхід успішний!");
                 switch (user.getRole().toUpperCase()) {
                     case "ADMIN" -> new Admin(user.getId(), user.getUsername()).showMenu();
-                    case "DONOR" -> Optional.ofNullable(Donor.fromDatabase(user.getId(), user.getUsername())).ifPresent(Donor::showMenu);
-                    case "RECIPIENT" -> Optional.ofNullable(Recipient.fromDatabase(user.getId(), user.getUsername())).ifPresent(Recipient::showMenu);
+                    case "DONOR" -> {
+                        Donor donor = Donor.fromDatabase(user.getId(), user.getUsername());
+                        if (donor == null) {
+                            // Якщо немає запису в таблиці donors, створюємо базовий запис
+                            createInitialDonorRecord(user.getId(), user.getUsername());
+                            donor = Donor.fromDatabase(user.getId(), user.getUsername());
+                        }
+                        if (donor != null) {
+                            donor.showMenu();
+                        } else {
+                            System.out.println("❌ Помилка завантаження профілю донора.");
+                        }
+                    }
+                    case "RECIPIENT" -> {
+                        Recipient recipient = Recipient.fromDatabase(user.getId(), user.getUsername());
+                        if (recipient == null) {
+                            // Якщо немає запису в таблиці recipients, створюємо базовий запис
+                            createInitialRecipientRecord(user.getId(), user.getUsername());
+                            recipient = Recipient.fromDatabase(user.getId(), user.getUsername());
+                        }
+                        if (recipient != null) {
+                            recipient.showMenu();
+                        } else {
+                            System.out.println("❌ Помилка завантаження профілю реципієнта.");
+                        }
+                    }
                     default -> System.out.println("\uD83D\uDC64 Ви увійшли як " + user.getRole() + ". Немає додаткового меню.");
                 }
             } else {
@@ -78,8 +105,77 @@ class AuthManager {
         boolean success = DatabaseManager.registerUser(login, password, role);
         if (success) {
             System.out.println("✅ Реєстрація успішна.");
+
+            // Після успішної реєстрації, отримуємо ID користувача
+            String finalRole = role;
+            DatabaseManager.getUserByLogin(login).ifPresent(user -> {
+                int userId = user.getId();
+
+                // Створюємо додаткові записи в залежності від ролі
+                if (finalRole.equals("DONOR")) {
+                    createInitialDonorRecord(userId, login);
+                } else if (finalRole.equals("RECIPIENT")) {
+                    createInitialRecipientRecord(userId, login);
+                }
+            });
         } else {
             System.out.println("❌ Помилка при реєстрації. Можливо, логін вже існує.");
+        }
+    }
+
+    private void createInitialDonorRecord(int userId, String username) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Перевіряємо, чи вже існує запис
+            PreparedStatement checkStmt = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM donors WHERE id = ?");
+            checkStmt.setInt(1, userId);
+            if (checkStmt.executeQuery().next() && checkStmt.executeQuery().getInt(1) > 0) {
+                return; // Запис вже існує
+            }
+
+            // Створюємо базовий запис донора
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO donors (id, name, surname, year, blood_type, weight, height) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            stmt.setInt(1, userId);
+            stmt.setString(2, "Новий"); // Тимчасове ім'я
+            stmt.setString(3, "Донор"); // Тимчасове прізвище
+            stmt.setInt(4, 2000); // Тимчасовий рік народження
+            stmt.setString(5, "Невідомо"); // Тимчасова група крові
+            stmt.setInt(6, 70); // Тимчасова вага
+            stmt.setInt(7, 170); // Тимчасовий зріст
+
+            stmt.executeUpdate();
+            System.out.println("✅ Створено початковий профіль донора.");
+        } catch (SQLException e) {
+            System.out.println("❌ Помилка при створенні профілю донора: " + e.getMessage());
+        }
+    }
+
+    private void createInitialRecipientRecord(int userId, String username) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Перевіряємо, чи вже існує запис
+            PreparedStatement checkStmt = conn.prepareStatement(
+                    "SELECT COUNT(*) FROM recipients WHERE id = ?");
+            checkStmt.setInt(1, userId);
+            if (checkStmt.executeQuery().next() && checkStmt.executeQuery().getInt(1) > 0) {
+                return; // Запис вже існує
+            }
+
+            // Створюємо базовий запис реципієнта
+            PreparedStatement stmt = conn.prepareStatement(
+                    "INSERT INTO recipients (id, name, surname, year, needed_blood_type, request_date, valid_until, medical_condition) " +
+                            "VALUES (?, ?, ?, ?, ?, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 30 DAY), ?)");
+            stmt.setInt(1, userId);
+            stmt.setString(2, "Новий"); // Тимчасове ім'я
+            stmt.setString(3, "Реципієнт"); // Тимчасове прізвище
+            stmt.setInt(4, 2000); // Тимчасовий рік народження
+            stmt.setString(5, "Невідомо"); // Тимчасова група крові
+            stmt.setString(6, "Не вказано"); // Тимчасовий медичний стан
+
+            stmt.executeUpdate();
+            System.out.println("✅ Створено початковий профіль реципієнта.");
+        } catch (SQLException e) {
+            System.out.println("❌ Помилка при створенні профілю реципієнта: " + e.getMessage());
         }
     }
 
@@ -147,9 +243,3 @@ class AuthManager {
         }
     }
 }
-
-
-
-
-
-
