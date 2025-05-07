@@ -31,7 +31,10 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files />
+    <open-files>
+      <object connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" object-ref="schemas/users/tables/users" />
+      <object connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" object-ref="schemas/users/tables/donors" />
+    </open-files>
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="3ded65d4-e538-4962-bce0-66f277424ea3" />
@@ -57,7 +60,7 @@
         <condition column="id" operator="=" value="" active="true" />
       </filter>
     </filter-actions>
-    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.users" active-filter-id="EMPTY_FILTER">
+    <filter-actions connection-id="3ded65d4-e538-4962-bce0-66f277424ea3" dataset="users.users" active-filter-id="">
       <filter id="853e4440-08fc-4a86-81eb-38bfb33828df" name="Filter" temporary="false" custom-name="false" type="basic" join-type="AND">
         <condition column="id" operator="=" value="" active="true" />
       </filter>

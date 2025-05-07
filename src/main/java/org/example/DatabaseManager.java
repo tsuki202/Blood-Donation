@@ -232,12 +232,71 @@ public class DatabaseManager {
     }
 
     public static boolean deleteUserByLoginAndRole(String login, String role) {
-        String query = "DELETE FROM users WHERE login = ? AND role = ?";
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, login);
-            stmt.setString(2, role);
-            return stmt.executeUpdate() > 0;
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false); // Start transaction
+
+            // First get the user ID
+            int userId = -1;
+            PreparedStatement getUserIdStmt = conn.prepareStatement(
+                    "SELECT id FROM users WHERE login = ? AND role = ?");
+            getUserIdStmt.setString(1, login);
+            getUserIdStmt.setString(2, role);
+            ResultSet rs = getUserIdStmt.executeQuery();
+
+            if (rs.next()) {
+                userId = rs.getInt("id");
+            } else {
+                return false; // User not found
+            }
+
+            // Delete related records based on role
+            if (role.equals("DONOR")) {
+                // Delete from donation_schedule
+                PreparedStatement deleteScheduleStmt = conn.prepareStatement(
+                        "DELETE FROM donation_schedule WHERE donor_id = ?");
+                deleteScheduleStmt.setInt(1, userId);
+                deleteScheduleStmt.executeUpdate();
+
+                // Delete from donations
+                PreparedStatement deleteDonationsStmt = conn.prepareStatement(
+                        "DELETE FROM donations WHERE donor_id = ?");
+                deleteDonationsStmt.setInt(1, userId);
+                deleteDonationsStmt.executeUpdate();
+
+                // Delete from donor_questionnaires
+                PreparedStatement deleteQuestionnairesStmt = conn.prepareStatement(
+                        "DELETE FROM donor_questionnaires WHERE donor_id = ?");
+                deleteQuestionnairesStmt.setInt(1, userId);
+                deleteQuestionnairesStmt.executeUpdate();
+
+                // Delete from donors
+                PreparedStatement deleteDonorStmt = conn.prepareStatement(
+                        "DELETE FROM donors WHERE id = ?");
+                deleteDonorStmt.setInt(1, userId);
+                deleteDonorStmt.executeUpdate();
+            } else if (role.equals("RECIPIENT")) {
+                // Delete from recipient_requests
+                PreparedStatement deleteRequestsStmt = conn.prepareStatement(
+                        "DELETE FROM recipient_requests WHERE recipient_id = ?");
+                deleteRequestsStmt.setInt(1, userId);
+                deleteRequestsStmt.executeUpdate();
+
+                // Delete from recipients
+                PreparedStatement deleteRecipientStmt = conn.prepareStatement(
+                        "DELETE FROM recipients WHERE id = ?");
+                deleteRecipientStmt.setInt(1, userId);
+                deleteRecipientStmt.executeUpdate();
+            }
+
+            // Finally delete from users
+            PreparedStatement deleteUserStmt = conn.prepareStatement(
+                    "DELETE FROM users WHERE id = ?");
+            deleteUserStmt.setInt(1, userId);
+            int result = deleteUserStmt.executeUpdate();
+
+            conn.commit(); // Commit transaction
+            return result > 0;
+
         } catch (SQLException e) {
             System.out.println("❌ Помилка при видаленні користувача: " + e.getMessage());
             return false;
@@ -258,20 +317,6 @@ public class DatabaseManager {
         }
     }
 
-    public static boolean createDonationRecord(int donorId, Date donationDate, int amount, String location) {
-        try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                     "INSERT INTO donations (donor_id, donation_date, amount, location) VALUES (?, ?, ?, ?)")) {
-            stmt.setInt(1, donorId);
-            stmt.setDate(2, donationDate);
-            stmt.setInt(3, amount);
-            stmt.setString(4, location);
-            return stmt.executeUpdate() > 0;
-        } catch (Exception e) {
-            System.out.println("❌ Помилка при створенні запису про донацію: " + e.getMessage());
-            return false;
-        }
-    }
     public static boolean createRecipientRequest(int recipientId, String notes) {
         try (Connection conn = getConnection()) {
             PreparedStatement stmt = conn.prepareStatement(
