@@ -37,8 +37,9 @@ public class Donor extends User {
             System.out.println("2 - Заповнити/оновити персональні дані");
             System.out.println("3 - Заповнити анкету донора");
             System.out.println("4 - Переглянути історію донацій");
-            System.out.println("5 - Записатися на донацію");
-            System.out.println("6 - Вийти");
+            System.out.println("5 - Переглянути заплановані донації");
+            System.out.println("6 - Записатися на донацію");
+            System.out.println("7 - Вийти");
             System.out.print("Оберіть дію: ");
 
             while (!scanner.hasNextInt()) {
@@ -54,11 +55,12 @@ public class Donor extends User {
                 case 2 -> updatePersonalData(scanner);
                 case 3 -> fillDonorQuestionnaire();
                 case 4 -> viewDonationHistory();
-                case 5 -> scheduleDonation();
-                case 6 -> System.out.println("🩸 Вихід з меню донора.");
+                case 5 -> viewScheduledDonations();
+                case 6 -> scheduleDonation();
+                case 7 -> System.out.println("🩸 Вихід з меню донора.");
                 default -> System.out.println("❌ Невірний вибір! Спробуйте ще раз.");
             }
-        } while (choice != 6);
+        } while (choice != 7);
     }
 
     private void updatePersonalData(Scanner scanner) {
@@ -237,10 +239,13 @@ public class Donor extends User {
 
             System.out.println("\n📅 Історія ваших донацій:");
             boolean hasDonations = false;
+            int count = 0;
 
             while (rs.next()) {
                 hasDonations = true;
-                System.out.println("\nДата: " + rs.getDate("donation_date"));
+                count++;
+                System.out.println("\n🔹 Донація #" + count);
+                System.out.println("Дата: " + rs.getDate("donation_date"));
                 System.out.println("Об'єм: " + rs.getInt("amount") + " мл");
                 System.out.println("Місце: " + rs.getString("location"));
             }
@@ -248,9 +253,65 @@ public class Donor extends User {
             if (!hasDonations) {
                 System.out.println("У вас ще немає історії донацій.");
             }
+
+            // Показуємо загальну статистику
+            if (hasDonations) {
+                PreparedStatement statStmt = conn.prepareStatement(
+                        "SELECT COUNT(*) as total_donations, SUM(amount) as total_amount FROM donations WHERE donor_id = ?");
+                statStmt.setInt(1, id);
+                ResultSet statRs = statStmt.executeQuery();
+
+                if (statRs.next()) {
+                    System.out.println("\n📊 Загальна статистика:");
+                    System.out.println("Всього донацій: " + statRs.getInt("total_donations"));
+                    System.out.println("Загальний об'єм: " + statRs.getInt("total_amount") + " мл");
+                }
+            }
         } catch (Exception e) {
             System.out.println("❌ Помилка при отриманні історії донацій: " + e.getMessage());
         }
+    }
+
+    private void viewScheduledDonations() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            PreparedStatement stmt = conn.prepareStatement(
+                    "SELECT id, scheduled_date, location, status FROM donation_schedule " +
+                            "WHERE donor_id = ? ORDER BY scheduled_date");
+            stmt.setInt(1, id);
+
+            ResultSet rs = stmt.executeQuery();
+
+            System.out.println("\n📅 Заплановані донації:");
+            boolean hasScheduled = false;
+            int count = 0;
+
+            while (rs.next()) {
+                hasScheduled = true;
+                count++;
+                System.out.println("\n🔹 Запланована донація #" + count);
+                System.out.println("ID запису: " + rs.getInt("id"));
+                System.out.println("Дата: " + rs.getDate("scheduled_date"));
+                System.out.println("Місце: " + rs.getString("location"));
+                System.out.println("Статус: " + getStatusUkrainian(rs.getString("status")));
+            }
+
+            if (!hasScheduled) {
+                System.out.println("У вас немає запланованих донацій.");
+                System.out.println("Оберіть пункт меню '6' для запису на донацію.");
+            }
+        } catch (Exception e) {
+            System.out.println("❌ Помилка при отриманні запланованих донацій: " + e.getMessage());
+        }
+    }
+
+    private String getStatusUkrainian(String status) {
+        return switch (status.toLowerCase()) {
+            case "pending" -> "Очікує підтвердження";
+            case "approved" -> "Підтверджено";
+            case "completed" -> "Завершено";
+            case "cancelled" -> "Скасовано";
+            default -> status;
+        };
     }
 
     private void scheduleDonation() {
@@ -273,6 +334,7 @@ public class Donor extends User {
 
             stmt.executeUpdate();
             System.out.println("\n✅ Ви успішно записались на донацію!");
+            System.out.println("Ваш запис очікує підтвердження. Ви можете переглянути його статус у меню 'Переглянути заплановані донації'.");
         } catch (Exception e) {
             System.out.println("❌ Помилка при записі на донацію: " + e.getMessage());
             System.out.println("Перевірте правильність формату дати (yyyy-mm-dd) та повторіть спробу.");
@@ -297,7 +359,6 @@ public class Donor extends User {
                 System.out.println("✅ Створено новий профіль донора.");
             }
 
-            // Теперь получаем запись
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM donors WHERE id = ?");
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -313,7 +374,6 @@ public class Donor extends User {
                 return new Donor(id, username, name, surname, year, bloodType, weight, height);
             }
 
-            // Если мы все еще здесь, значит что-то пошло не так
             System.out.println("❌ Не вдалося завантажити профіль донора після створення запису.");
             return null;
 
