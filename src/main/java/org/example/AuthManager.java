@@ -125,11 +125,13 @@ class AuthManager {
 
     private void createInitialDonorRecord(int userId, String username) {
         try (Connection conn = DatabaseManager.getConnection()) {
-            // Перевіряємо, чи вже існує запис
+            // Перевіряємо, чи вже існує запис - исправлено!
             PreparedStatement checkStmt = conn.prepareStatement(
                     "SELECT COUNT(*) FROM donors WHERE id = ?");
             checkStmt.setInt(1, userId);
-            if (checkStmt.executeQuery().next() && checkStmt.executeQuery().getInt(1) > 0) {
+            ResultSet checkRs = checkStmt.executeQuery();
+
+            if (checkRs.next() && checkRs.getInt(1) > 0) {
                 return; // Запис вже існує
             }
 
@@ -153,7 +155,7 @@ class AuthManager {
 
     private void createInitialRecipientRecord(int userId, String username) {
         try (Connection conn = DatabaseManager.getConnection()) {
-            // Перевіряємо, чи вже існує запис
+            // Перевіряємо, чи вже існує запис - исправлено!
             PreparedStatement checkStmt = conn.prepareStatement(
                     "SELECT COUNT(*) FROM recipients WHERE id = ?");
             checkStmt.setInt(1, userId);

@@ -281,6 +281,23 @@ public class Donor extends User {
 
     public static Donor fromDatabase(int id, String username) {
         try (Connection conn = DatabaseManager.getConnection()) {
+            // Сначала проверяем существование записи
+            PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM donors WHERE id = ?");
+            checkStmt.setInt(1, id);
+            ResultSet checkRs = checkStmt.executeQuery();
+
+            boolean exists = checkRs.next() && checkRs.getInt(1) > 0;
+
+            if (!exists) {
+                // Если записи нет, создаем новую с базовыми значениями
+                PreparedStatement insertStmt = conn.prepareStatement(
+                        "INSERT INTO donors (id, name, surname, year, blood_type, weight, height) VALUES (?, 'Новий', 'Донор', 2000, 'Невідомо', 70, 170)");
+                insertStmt.setInt(1, id);
+                insertStmt.executeUpdate();
+                System.out.println("✅ Створено новий профіль донора.");
+            }
+
+            // Теперь получаем запись
             PreparedStatement stmt = conn.prepareStatement("SELECT * FROM donors WHERE id = ?");
             stmt.setInt(1, id);
             ResultSet rs = stmt.executeQuery();
@@ -294,21 +311,16 @@ public class Donor extends User {
                 int height = rs.getInt("height");
 
                 return new Donor(id, username, name, surname, year, bloodType, weight, height);
-            } else {
-                // Якщо запис у таблиці donors не знайдено, створюємо новий запис
-                PreparedStatement insertStmt = conn.prepareStatement(
-                        "INSERT INTO donors (id, name, surname, year, blood_type, weight, height) VALUES (?, '', '', 0, '', 0, 0)");
-                insertStmt.setInt(1, id);
-                insertStmt.executeUpdate();
-
-                // Повертаємо новий об'єкт з порожніми полями
-                return new Donor(id, username, "", "", 0, "", 0, 0);
             }
+
+            // Если мы все еще здесь, значит что-то пошло не так
+            System.out.println("❌ Не вдалося завантажити профіль донора після створення запису.");
+            return null;
+
         } catch (Exception e) {
             System.out.println("❌ Помилка при створенні профілю донора: " + e.getMessage());
             e.printStackTrace();
-            // Повертаємо об'єкт з базовими значеннями, щоб уникнути NullPointerException
-            return new Donor(id, username, "", "", 0, "", 0, 0);
+            return null;
         }
     }
-}   
+}
