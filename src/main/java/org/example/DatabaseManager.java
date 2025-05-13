@@ -18,6 +18,7 @@ public class DatabaseManager {
             String createUsersTable = "CREATE TABLE IF NOT EXISTS users (" +
                     "id INT AUTO_INCREMENT PRIMARY KEY," +
                     "login VARCHAR(255) UNIQUE NOT NULL," +
+                    "username VARCHAR(255) NOT NULL," + // Додаємо поле username
                     "password VARCHAR(255) NOT NULL," +
                     "role VARCHAR(50) NOT NULL" +
                     ")";
@@ -110,11 +111,13 @@ public class DatabaseManager {
             conn.setAutoCommit(false); // Починаємо транзакцію
 
             // Додаємо користувача в таблицю users
-            String userQuery = "INSERT INTO users (login, password, role) VALUES (?, ?, ?)";
+            // Змінюємо запит для включення поля username (встановлюємо таке ж значення як і login)
+            String userQuery = "INSERT INTO users (login, username, password, role) VALUES (?, ?, ?, ?)";
             PreparedStatement userStmt = conn.prepareStatement(userQuery, Statement.RETURN_GENERATED_KEYS);
             userStmt.setString(1, login);
-            userStmt.setString(2, password);
-            userStmt.setString(3, role);
+            userStmt.setString(2, login); // Використовуємо login як значення для username
+            userStmt.setString(3, password);
+            userStmt.setString(4, role);
 
             int userResult = userStmt.executeUpdate();
             if (userResult <= 0) {
