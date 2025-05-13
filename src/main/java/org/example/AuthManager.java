@@ -43,13 +43,13 @@ class AuthManager {
             if (user.getPassword().equals(password)) {
                 System.out.println("✅ Вхід успішний!");
                 switch (user.getRole().toUpperCase()) {
-                    case "ADMIN" -> new Admin(user.getId(), user.getUsername()).showMenu();
+                    case "ADMIN" -> new Admin(user.getId(), user.getLogin()).showMenu();
                     case "DONOR" -> {
-                        Donor donor = Donor.fromDatabase(user.getId(), user.getUsername());
+                        Donor donor = Donor.fromDatabase(user.getId(), user.getLogin());
                         if (donor == null) {
                             // Якщо немає запису в таблиці donors, створюємо базовий запис
-                            createInitialDonorRecord(user.getId(), user.getUsername());
-                            donor = Donor.fromDatabase(user.getId(), user.getUsername());
+                            createInitialDonorRecord(user.getId(), user.getLogin());
+                            donor = Donor.fromDatabase(user.getId(), user.getLogin());
                         }
                         if (donor != null) {
                             donor.showMenu();
@@ -58,11 +58,11 @@ class AuthManager {
                         }
                     }
                     case "RECIPIENT" -> {
-                        Recipient recipient = Recipient.fromDatabase(user.getId(), user.getUsername());
+                        Recipient recipient = Recipient.fromDatabase(user.getId(), user.getLogin());
                         if (recipient == null) {
                             // Якщо немає запису в таблиці recipients, створюємо базовий запис
-                            createInitialRecipientRecord(user.getId(), user.getUsername());
-                            recipient = Recipient.fromDatabase(user.getId(), user.getUsername());
+                            createInitialRecipientRecord(user.getId(), user.getLogin());
+                            recipient = Recipient.fromDatabase(user.getId(), user.getLogin());
                         }
                         if (recipient != null) {
                             recipient.showMenu();

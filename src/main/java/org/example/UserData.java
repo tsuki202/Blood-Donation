@@ -5,7 +5,7 @@ import lombok.*;
 @AllArgsConstructor
 public class UserData {
     private int id;
-    private String username;
+    private String login;
     private String password;
     private String role;
 

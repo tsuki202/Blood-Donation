@@ -12,8 +12,8 @@ public class Donor extends User {
     private int weight;
     private int height;
 
-    public Donor(int id, String username, String name, String surname, int year, String bloodType, int weight, int height) {
-        super(id, username, "DONOR");
+    public Donor(int id, String login, String name, String surname, int year, String bloodType, int weight, int height) {
+        super(id, login, "DONOR");
         this.name = name;
         this.surname = surname;
         this.year = year;
@@ -27,7 +27,7 @@ public class Donor extends User {
         Scanner scanner = new Scanner(System.in);
         int choice;
         do {
-            System.out.println("\n🩸 Ви зайшли як Донор " + username);
+            System.out.println("\n🩸 Ви зайшли як Донор " + login);
             if (name != null && !name.isEmpty()) {
                 System.out.println("Ім'я: " + name + " " + surname);
             } else {
