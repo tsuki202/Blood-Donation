@@ -2,6 +2,7 @@ package org.example;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Scanner;
 
@@ -156,20 +157,33 @@ class AuthManager {
             PreparedStatement checkStmt = conn.prepareStatement(
                     "SELECT COUNT(*) FROM recipients WHERE id = ?");
             checkStmt.setInt(1, userId);
-            if (checkStmt.executeQuery().next() && checkStmt.executeQuery().getInt(1) > 0) {
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next() && rs.getInt(1) > 0) {
                 return; // Запис вже існує
             }
+
+            // Створюємо поточну дату
+            java.sql.Date currentDate = new java.sql.Date(System.currentTimeMillis());
+
+            // Створюємо дату, що на 30 днів пізніше від поточної
+            java.util.Calendar calendar = java.util.Calendar.getInstance();
+            calendar.setTime(currentDate);
+            calendar.add(java.util.Calendar.DAY_OF_MONTH, 30);
+            java.sql.Date validUntilDate = new java.sql.Date(calendar.getTimeInMillis());
 
             // Створюємо базовий запис реципієнта
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO recipients (id, name, surname, year, needed_blood_type, request_date, valid_until, medical_condition) " +
-                            "VALUES (?, ?, ?, ?, ?, CURRENT_DATE, DATE_ADD(CURRENT_DATE, INTERVAL 30 DAY), ?)");
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             stmt.setInt(1, userId);
             stmt.setString(2, "Новий"); // Тимчасове ім'я
             stmt.setString(3, "Реципієнт"); // Тимчасове прізвище
             stmt.setInt(4, 2000); // Тимчасовий рік народження
             stmt.setString(5, "Невідомо"); // Тимчасова група крові
-            stmt.setString(6, "Не вказано"); // Тимчасовий медичний стан
+            stmt.setDate(6, currentDate); // Поточна дата
+            stmt.setDate(7, validUntilDate); // Дата через 30 днів
+            stmt.setString(8, "Не вказано"); // Тимчасовий медичний стан
 
             stmt.executeUpdate();
             System.out.println("✅ Створено початковий профіль реципієнта.");
