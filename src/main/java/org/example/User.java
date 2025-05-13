@@ -4,14 +4,15 @@ import lombok.*;
 
 @Getter
 @Setter
+@Data
 public abstract class User implements UserAction {
     protected int id;
-    protected String username;
+    protected String login;
     protected String role;
 
-    public User(int id, String username, String role) {
+    public User(int id, String login, String role) {
         this.id = id;
-        this.username = username;
+        this.login = login;
         this.role = role;
     }
 

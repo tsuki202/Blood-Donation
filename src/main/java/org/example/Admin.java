@@ -8,12 +8,12 @@ import java.util.Scanner;
 
 public class Admin {
     private final int id;
-    private final String username;
+    private final String login;
     private final Scanner scanner = new Scanner(System.in);
 
-    public Admin(int id, String username) {
+    public Admin(int id, String login) {
         this.id = id;
-        this.username = username;
+        this.login = login;
     }
 
     public void showMenu() {

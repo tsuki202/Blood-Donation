@@ -13,9 +13,9 @@ public class Recipient extends User {
     private Date validUntil;
     private String medicalCondition;
 
-    public Recipient(int id, String username, String name, String surname, int year,
+    public Recipient(int id, String login, String name, String surname, int year,
                      String neededBloodType, Date requestDate, Date validUntil, String medicalCondition) {
-        super(id, username, "RECIPIENT");
+        super(id, login, "RECIPIENT");
         this.name = name;
         this.surname = surname;
         this.year = year;
@@ -30,7 +30,7 @@ public class Recipient extends User {
         Scanner scanner = new Scanner(System.in);
         int choice;
         do {
-            System.out.println("\n🏥 Ви зайшли як Реципієнт " + username);
+            System.out.println("\n🏥 Ви зайшли як Реципієнт " + login);
             if (name != null && !name.isEmpty()) {
                 System.out.println("Ім'я: " + name + " " + surname);
             } else {
