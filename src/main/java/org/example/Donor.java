@@ -343,7 +343,6 @@ public class Donor extends User {
 
     public static Donor fromDatabase(int id, String username) {
         try (Connection conn = DatabaseManager.getConnection()) {
-            // Сначала проверяем существование записи
             PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) FROM donors WHERE id = ?");
             checkStmt.setInt(1, id);
             ResultSet checkRs = checkStmt.executeQuery();
@@ -351,7 +350,6 @@ public class Donor extends User {
             boolean exists = checkRs.next() && checkRs.getInt(1) > 0;
 
             if (!exists) {
-                // Если записи нет, создаем новую с базовыми значениями
                 PreparedStatement insertStmt = conn.prepareStatement(
                         "INSERT INTO donors (id, name, surname, year, blood_type, weight, height) VALUES (?, 'Новий', 'Донор', 2000, 'Невідомо', 70, 170)");
                 insertStmt.setInt(1, id);
